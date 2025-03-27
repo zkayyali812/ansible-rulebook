@@ -15,6 +15,7 @@
 import sys
 
 from ansible_rulebook import terminal
+from ansible_rulebook.util import mask_sensitive_variable_values
 
 from .control import Control
 from .helper import Helper
@@ -44,7 +45,9 @@ class PrintEvent:
 
         self.display.banner(
             "event",
-            self.helper.control.variables[var_name],
+            mask_sensitive_variable_values(
+                self.helper.control.variables[var_name]
+            ),
             pretty=self.action_args.get("pretty", False),
         )
         sys.stdout.flush()
