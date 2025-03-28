@@ -50,7 +50,7 @@ EDA_BUILTIN_FILTER_PREFIX = "eda.builtin."
 
 
 def decrypted_context(
-    obj: Union[Dict, List, str, bool, int]
+    obj: Union[Dict, List, str, bool, int],
 ) -> Union[Dict, List, str, bool, int]:
     if isinstance(obj, dict):
         return {k: decrypted_context(v) for k, v in obj.items()}
@@ -380,3 +380,46 @@ def validate_url(url: str, url_type: str) -> bool:
     if url_type == "controller":
         return res.scheme in ["http", "https"] and bool(res.netloc)
     return res.scheme in ["ws", "wss"] and bool(res.netloc)
+
+
+# If the following values exist in a key,
+# replace the value of the key with the MASKED_VARIABLE
+KEYS_TO_FILTER = [
+    "token",
+    "password",
+]
+MASKED_VARIABLE = "******"
+
+
+def mask_sensitive_variable(key: str, val: str):
+    """
+    Takes in a key and value, if they key contains a
+    substring in the KEYS_TO_FILTER, mask the value.
+    Otherwise return the value.
+    """
+    if any(
+        filtered_key.casefold() in str(key).casefold()
+        for filtered_key in KEYS_TO_FILTER
+    ):
+        return MASKED_VARIABLE
+    else:
+        return val
+
+
+def mask_sensitive_variable_values(variables):
+    """
+    Takes in a dictionary, list, or string of variables
+    and masks the sensitive variable values if necessary
+    """
+    if isinstance(variables, dict):
+        masked_data = {}
+        for key, val in variables.items():
+            if isinstance(val, (dict, list)):
+                masked_data[key] = mask_sensitive_variable_values(val)
+            else:
+                masked_data[key] = mask_sensitive_variable(key, val)
+        return masked_data
+    elif isinstance(variables, list):
+        return [mask_sensitive_variable_values(item) for item in variables]
+    else:
+        return variables
