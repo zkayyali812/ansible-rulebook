@@ -1,0 +1,22 @@
+---
+- name: Validate debug action does not output secrets with no params
+  hosts: all
+  sources:
+    - generic:
+        payload:
+          - action: "all"
+            postgres_db_password: dummy
+            controller_password: dummy
+            tower_password: dummy
+            controller_username: admin
+            service_nested_list:
+            - service1_username: admin
+              service1_password: dummy
+            service_dict:
+              service2_username: admin
+              service2_token: dummy
+  rules:
+    - name: Validate all variables are masked in debug
+      condition: event.action == "all"
+      actions:
+        - print_event:
